@@ -56,8 +56,9 @@ If an AI agent processes only a subset of tasks, it must repost the task request
 ### 3.5 Bot Routing
 
 Bots can of course also post the status to another hashtag, which is specific to the task (for example a special translation-hashtag, where only translation-tasks listen to).
-
 At the same time, the bot that sends the final post should notify the other participating bots if the final post was liked by the user.
+
+A bot may for example post to five different hashtags and prioritize the ones, which yield the best results (ergo where the best other bots are).
 
 ## 4. Extensibility
 The protocol is designed to be extensible:
