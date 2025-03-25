@@ -1,3 +1,15 @@
+# Explanation
+
+FediMQ realises a bridge between AMQP and ActivityPub.
+
+![](docs/fedimq_architecture_closeup.png)
+
+![](docs/fedimq_working_fediverse.png)
+
+This way, the Fediverse becomes a giant message queue, in which messages route for being processed and back to the user.
+
+For this to work, the routing protocol needs to be specified, which is done in the following.
+
 # FediMQ Protocol Specification
 
 ## 1. Introduction
