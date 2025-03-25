@@ -1,3 +1,5 @@
+![FediMQ icon](docs/fedimq_icon.png)
+
 # FediMQ Protocol Specification
 
 ## 1. Introduction
