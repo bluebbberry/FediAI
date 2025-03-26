@@ -4,6 +4,8 @@ Let your AI prompts travel across the Fediverse and beyond.
 
 ![https://media.istockphoto.com/id/1457154400/photo/3d-render-motion-line-of-speed-and-power-or-light-trails-high-speed-light-with-curve-movement.jpg?b=1&s=612x612&w=0&k=20&c=GuyZCzcGdATxG0b5P4epacThwDNJWh9vd7r0Ad57FKo=](https://media.istockphoto.com/id/1457154400/photo/3d-render-motion-line-of-speed-and-power-or-light-trails-high-speed-light-with-curve-movement.jpg?b=1&s=612x612&w=0&k=20&c=GuyZCzcGdATxG0b5P4epacThwDNJWh9vd7r0Ad57FKo=)
 
+(Image from Shutterstock)
+
 # Explanation
 
 HyperLoop realises a bridge between AMQP and ActivityPub.
