@@ -3,41 +3,12 @@ import logging
 import time
 import queue
 import threading
+from fediverse_task_fetcher import FediverseTaskFetcher
+from fediverse_task_reposter import FediverseTaskReposter
 
 # Local queues for tasks and results
 task_queue = queue.Queue()
 result_queue = queue.Queue()
-
-
-class FediverseTaskFetcher:
-    """Fetches posts from the Fediverse containing AI task requests."""
-
-    def fetch_posts(self):
-        return [
-            {
-                "author": "@user",
-                "content": '{"tasks": ["translation", "sentiment_analysis"], "value": "Hello, world!", "options": {"language": "fr"}}',
-                # "content": '{"tasks": ["translation"], "value": "Hello, world!", "options": {"language": "fr"}}',
-                "id": "12345"
-            }
-        ]
-
-
-class FediverseTaskReposter:
-    """Posts processed task results back to the Fediverse."""
-
-    def send_result(self, result):
-        if result.get("remaining_tasks"):
-            new_task_post = json.dumps({
-                "tasks": result["remaining_tasks"],
-                "value": result["result"],
-                "options": {},
-                "status": "partial"
-            })
-            print(f"Reposting remaining tasks to Mastodon: {new_task_post}")
-        else:
-            message = f"@{result['author']} Task completed: {result['original_post']} → {result['result']}"
-            print(f"Posting result to Mastodon: {message}")
 
 
 def post_to_queue(task_data, original_post):
