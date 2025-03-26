@@ -25,16 +25,18 @@ class FediverseTaskReposter:
     """Posts processed task results back to the Fediverse."""
 
     def send_result(self, result):
-        print(f"Posting result to Mastodon: {result}")
+        message = f"{result['author']} Task completed: {result['original_post']} → {result['result']}"
+        print(f"Posting result to Mastodon: \"{message}\"")
 
 
-def post_to_queue(task_data):
-    """Posts the fetched task to a local queue."""
+def post_to_queue(task_data, original_post):
+    """Posts the fetched task to a local queue, including the original post."""
+    task_data["original_post"] = original_post
     task_queue.put(task_data)
     print(f"Task enqueued: {task_data}")
 
 
-def task_worker_uppercaser():
+def task_worker():
     """Processes tasks from the queue (mock function)."""
     while True:
         task_data = task_queue.get()
@@ -44,6 +46,7 @@ def task_worker_uppercaser():
         # Mock processing
         task_result = {
             "author": task_data["author"],
+            "original_post": task_data["original_post"],
             "result": f"[Processed]: {task_data['value'].upper()}"
         }
 
@@ -73,14 +76,14 @@ def main():
         try:
             task_data = json.loads(post["content"])
             task_data["author"] = post["author"]
-            post_to_queue(task_data)
+            post_to_queue(task_data, post["content"])
         except json.JSONDecodeError:
             print(f"Skipping invalid task format from {post['author']}")
 
     # Start worker threads
     workers = []
     for _ in range(2):  # Two task workers
-        worker = threading.Thread(target=task_worker_uppercaser, daemon=True)
+        worker = threading.Thread(target=task_worker, daemon=True)
         worker.start()
         workers.append(worker)
 
