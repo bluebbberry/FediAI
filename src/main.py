@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 import queue
 import threading
@@ -15,7 +16,8 @@ class FediverseTaskFetcher:
         return [
             {
                 "author": "@user",
-                "content": '{"tasks": ["translation"], "value": "Hello, world!", "options": {"language": "fr"}}',
+                "content": '{"tasks": ["translation", "sentiment_analysis"], "value": "Hello, world!", "options": {"language": "fr"}}',
+                # "content": '{"tasks": ["translation"], "value": "Hello, world!", "options": {"language": "fr"}}',
                 "id": "12345"
             }
         ]
@@ -25,8 +27,17 @@ class FediverseTaskReposter:
     """Posts processed task results back to the Fediverse."""
 
     def send_result(self, result):
-        message = f"{result['author']} Task completed: {result['original_post']} → {result['result']}"
-        print(f"Posting result to Mastodon: \"{message}\"")
+        if result.get("remaining_tasks"):
+            new_task_post = json.dumps({
+                "tasks": result["remaining_tasks"],
+                "value": result["result"],
+                "options": {},
+                "status": "partial"
+            })
+            print(f"Reposting remaining tasks to Mastodon: {new_task_post}")
+        else:
+            message = f"@{result['author']} Task completed: {result['original_post']} → {result['result']}"
+            print(f"Posting result to Mastodon: {message}")
 
 
 def post_to_queue(task_data, original_post):
@@ -43,11 +54,15 @@ def task_worker():
         if task_data is None:
             break  # Exit condition for stopping worker threads
 
-        # Mock processing
+        completed_task = task_data["tasks"].pop(0)
+        print(f"[Processed {completed_task}]: {task_data['value'].upper()}")
+        processed_value = task_data['value'].upper()
+
         task_result = {
             "author": task_data["author"],
             "original_post": task_data["original_post"],
-            "result": f"[Processed]: {task_data['value'].upper()}"
+            "result": processed_value,
+            "remaining_tasks": task_data["tasks"] if task_data["tasks"] else None
         }
 
         result_queue.put(task_result)
