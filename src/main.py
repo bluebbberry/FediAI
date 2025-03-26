@@ -1,118 +1,107 @@
-from fastapi import FastAPI, HTTPException
-import asyncio
 import json
-import aio_pika
-from pydantic import BaseModel
-from mastodon import Mastodon
+import time
+import queue
+import threading
 
-# Configuration (Replace with your own values)
-RABBITMQ_URL = "amqp://guest:guest@localhost/"
-MASTODON_ACCESS_TOKEN = "your_mastodon_access_token"
-MASTODON_API_BASE_URL = "https://mastodon.instance"
-HASHTAG = "AITask"
-RESULTS_QUEUE = "ai_results"
-
-# Initialize Mastodon API
-mastodon = Mastodon(access_token=MASTODON_ACCESS_TOKEN, api_base_url=MASTODON_API_BASE_URL)
-
-# Initialize FastAPI
-app = FastAPI(title="FediMQAPI", description="API for posting AI tasks to the Fediverse and FediMQ message queue.")
+# Local queues for tasks and results
+task_queue = queue.Queue()
+result_queue = queue.Queue()
 
 
-# Define task request model
-class TaskRequest(BaseModel):
-    tasks: list[str]
-    value: str
-    options: dict = {}
-    author: str
+class FediverseTaskFetcher:
+    """Fetches posts from the Fediverse containing AI task requests."""
+
+    def fetch_posts(self):
+        return [
+            {
+                "author": "@user",
+                "content": '{"tasks": ["translation"], "value": "Hello, world!", "options": {"language": "fr"}}',
+                "id": "12345"
+            }
+        ]
 
 
-# Connect to RabbitMQ
-async def publish_to_queue(message: dict, routing_key: str):
-    connection = await aio_pika.connect_robust(RABBITMQ_URL)
-    async with connection:
-        channel = await connection.channel()
-        await channel.default_exchange.publish(
-            aio_pika.Message(body=json.dumps(message).encode()),
-            routing_key=routing_key
-        )
+class FediverseTaskReposter:
+    """Posts processed task results back to the Fediverse."""
+
+    def send_result(self, result):
+        print(f"Posting result to Mastodon: {result}")
 
 
-# API endpoint to submit a task
-@app.post("/submit-task")
-async def submit_task(task: TaskRequest):
-    message = {
-        "tasks": task.tasks,
-        "value": task.value,
-        "options": task.options,
-        "author": task.author
-    }
-    await publish_to_queue(message, "ai_tasks")
-    return {"message": "Task submitted successfully", "task": message}
+def post_to_queue(task_data):
+    """Posts the fetched task to a local queue."""
+    task_queue.put(task_data)
+    print(f"Task enqueued: {task_data}")
 
 
-# Fetch latest posts with the given hashtag periodically
-async def fetch_activitypub_tasks():
+def task_worker_uppercaser():
+    """Processes tasks from the queue (mock function)."""
     while True:
-        print("Fetching new tasks from Mastodon...")
-        posts = mastodon.timeline_hashtag(HASHTAG, limit=5)
-        for post in posts:
-            try:
-                content = post["content"].replace("<p>", "").replace("</p>", "")  # Remove HTML tags
-                task_data = json.loads(content)
-                task_data["author"] = post["account"]["acct"]
-                await publish_to_queue(task_data, "ai_tasks")
-                print(f"Task received: {task_data}")
-            except json.JSONDecodeError:
-                print("Skipping invalid task format.")
-        await asyncio.sleep(60)  # Fetch new posts every 60 seconds
+        task_data = task_queue.get()
+        if task_data is None:
+            break  # Exit condition for stopping worker threads
+
+        # Mock processing
+        task_result = {
+            "author": task_data["author"],
+            "result": f"[Processed]: {task_data['value'].upper()}"
+        }
+
+        result_queue.put(task_result)
+        print(f"Task processed: {task_result}")
+        task_queue.task_done()
 
 
-# Consumer that processes AI tasks
-async def consume_tasks():
-    connection = await aio_pika.connect_robust(RABBITMQ_URL)
-    async with connection:
-        channel = await connection.channel()
-        queue = await channel.declare_queue("ai_tasks")
-
-        async for message in queue:
-            async with message.process():
-                task = json.loads(message.body)
-                print(f"Processing AI task: {task}")
-
-                if task["tasks"]:
-                    current_task = task["tasks"].pop(0)
-                    response = {
-                        "author": task["author"],
-                        "result": f"Task '{current_task}' processed for @{task['author']}",
-                        "tasks": task["tasks"]
-                    }
-                    await publish_to_queue(response, RESULTS_QUEUE)
-                    print(f"Posted result to results queue: {response}")
-
-                if task["tasks"]:
-                    await publish_to_queue(task, "ai_tasks")  # Repost with remaining tasks
-                else:
-                    print("All tasks completed.")
+def subscribe_to_topic():
+    """Subscribes to a topic and listens for processed results."""
+    reposter = FediverseTaskReposter()
+    print("Subscribed to topic. Listening for task results...")
+    while True:
+        result = result_queue.get()
+        if result is None:
+            break  # Exit condition
+        reposter.send_result(result)
+        result_queue.task_done()
 
 
-# Consumer that listens for AI results and posts them to Mastodon
-async def consume_results():
-    connection = await aio_pika.connect_robust(RABBITMQ_URL)
-    async with connection:
-        channel = await connection.channel()
-        queue = await channel.declare_queue(RESULTS_QUEUE)
+def main():
+    """Main function to fetch posts, enqueue tasks, and start workers."""
+    fetcher = FediverseTaskFetcher()
+    posts = fetcher.fetch_posts()
 
-        async for message in queue:
-            async with message.process():
-                result = json.loads(message.body)
-                mastodon.status_post(f"@{result['author']} {result['result']} #{HASHTAG}")
-                print(f"Posted result to Mastodon: {result['result']}")
+    for post in posts:
+        try:
+            task_data = json.loads(post["content"])
+            task_data["author"] = post["author"]
+            post_to_queue(task_data)
+        except json.JSONDecodeError:
+            print(f"Skipping invalid task format from {post['author']}")
+
+    # Start worker threads
+    workers = []
+    for _ in range(2):  # Two task workers
+        worker = threading.Thread(target=task_worker_uppercaser, daemon=True)
+        worker.start()
+        workers.append(worker)
+
+    # Start subscriber thread
+    subscriber = threading.Thread(target=subscribe_to_topic, daemon=True)
+    subscriber.start()
+
+    # Wait for queues to be processed
+    task_queue.join()
+    result_queue.join()
+
+    # Stop workers
+    for _ in range(2):
+        task_queue.put(None)
+    for worker in workers:
+        worker.join()
+
+    # Stop subscriber
+    result_queue.put(None)
+    subscriber.join()
 
 
-# Background tasks for consuming messages and fetching tasks from Mastodon
-@app.on_event("startup")
-async def startup_event():
-    asyncio.create_task(consume_tasks())
-    asyncio.create_task(fetch_activitypub_tasks())
-    asyncio.create_task(consume_results())
+if __name__ == "__main__":
+    main()
