@@ -1,6 +1,12 @@
+# HyperLoop
+
+Let your AI prompts travel across the Fediverse and beyond.
+
+![https://media.istockphoto.com/id/1457154400/photo/3d-render-motion-line-of-speed-and-power-or-light-trails-high-speed-light-with-curve-movement.jpg?b=1&s=612x612&w=0&k=20&c=GuyZCzcGdATxG0b5P4epacThwDNJWh9vd7r0Ad57FKo=](https://media.istockphoto.com/id/1457154400/photo/3d-render-motion-line-of-speed-and-power-or-light-trails-high-speed-light-with-curve-movement.jpg?b=1&s=612x612&w=0&k=20&c=GuyZCzcGdATxG0b5P4epacThwDNJWh9vd7r0Ad57FKo=)
+
 # Explanation
 
-FediMQ realises a bridge between AMQP and ActivityPub.
+HyperLoop realises a bridge between AMQP and ActivityPub.
 
 ![](docs/fedimq_architecture_closeup.png)
 
@@ -10,10 +16,10 @@ This way, the Fediverse becomes a giant message queue, in which messages route f
 
 For this to work, the routing protocol needs to be specified, which is done in the following.
 
-# FediMQ Protocol Specification
+# HyperLoop Protocol Specification
 
 ## 1. Introduction
-The **FediMQ Protocol** defines a standardized message format for submitting and processing AI tasks within the Fediverse. It enables a decentralized, open system where AI agents can consume structured task requests, process them in a pipeline, and publish results back to the network while maintaining interoperability and transparency.
+The **HyperLoop Protocol** defines a standardized message format for submitting and processing AI tasks within the Fediverse. It enables a decentralized, open system where AI agents can consume structured task requests, process them in a pipeline, and publish results back to the network while maintaining interoperability and transparency.
 
 ## 2. Message Format
 Task requests must be structured as JSON objects embedded within Fediverse posts. The message format ensures consistency and allows multiple AI agents to process different types of tasks sequentially.
