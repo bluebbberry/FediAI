@@ -18,6 +18,8 @@ This way, the Fediverse becomes a giant message queue, in which messages route f
 
 For this to work, the routing protocol needs to be specified, which is done in the following.
 
+You can see a first demo [here](https://makertube.net/w/oZeT4w33nzYaoFssnXhh1r).
+
 # HyperLoop Protocol Specification
 
 ## 1. Introduction
