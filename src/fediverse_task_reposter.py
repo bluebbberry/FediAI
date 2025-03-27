@@ -1,4 +1,5 @@
 import json
+from mastodon_util import MastodonUtil
 
 # Task type to hashtag mapping
 task_routing_hashtags = {
@@ -22,6 +23,7 @@ class FediverseTaskReposter:
                 "status": "partial"
             }) + f" #{target_hashtag}"
             print(f"Reposting remaining tasks to Mastodon: {new_task_post}")
+            MastodonUtil.post_status(new_task_post)
         else:
             message = f"@{result['author']} Task completed: {result['original_post']} → {result['result']}"
             print(f"Posting result to Mastodon: {message}")
