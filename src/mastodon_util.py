@@ -12,11 +12,18 @@ class MastodonUtil:
     def fetch_posts():
         MASTODON_BASE_URL = os.getenv("MASTODON_BASE_URL", "https://mastodon.instance/api/v1")
         ACCESS_TOKEN = os.getenv("ACCESS_TOKEN", "your_access_token_here")
+        hashtag = os.getenv("FETCH_HASHTAG", "AITask")  # Default to #AITask if not set
         headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
-        response = requests.get(f"{MASTODON_BASE_URL}/timelines/public", headers=headers, params={"limit": 5})
+        response = requests.get(
+            f"{MASTODON_BASE_URL}/timelines/tag/{hashtag}",
+            headers=headers,
+            params={"limit": 5}
+        )
         if response.status_code == 200:
             return response.json()
-        return []
+        else:
+            print(f"Found no post under the given hashtag: {hashtag}")
+            return []
 
     @staticmethod
     def post_status(content):

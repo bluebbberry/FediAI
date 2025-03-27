@@ -11,9 +11,8 @@ task_queue = queue.Queue()
 result_queue = queue.Queue()
 
 
-def post_to_queue(task_data, original_post):
+def post_to_queue(task_data):
     """Posts the fetched task to a local queue, including the original post."""
-    task_data["original_post"] = original_post
     task_queue.put(task_data)
     print(f"Task enqueued: {task_data}")
 
@@ -31,7 +30,6 @@ def task_worker():
 
         task_result = {
             "author": task_data["author"],
-            "original_post": task_data["original_post"],
             "result": processed_value,
             "remaining_tasks": task_data["tasks"] if task_data["tasks"] else None
         }
@@ -60,9 +58,7 @@ def main():
 
     for post in posts:
         try:
-            task_data = json.loads(post["content"])
-            task_data["author"] = post["author"]
-            post_to_queue(task_data, post["content"])
+            post_to_queue(post)
         except json.JSONDecodeError:
             print(f"Skipping invalid task format from {post['author']}")
 
