@@ -3,9 +3,10 @@ from mastodon_util import MastodonUtil
 
 # Task type to hashtag mapping
 task_routing_hashtags = {
+    "uppercaser": "fediuppercaser",
     "translation": "fediaitranslation",
     "sentiment_analysis": "fediaisentiment",
-    "image_generation": "fediaiimagegen"
+    "image_generation": "imagegen"
 }
 
 class FediverseTaskReposter:
