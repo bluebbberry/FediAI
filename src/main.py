@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)  # Allow frontend to communicate with backend
+CORS(app, resources={r"/*": {"origins": "*"}})  # Allows all origins
 
 # Local queues for tasks and results
 task_queue = queue.Queue()
@@ -84,7 +84,7 @@ def send_prompt():
     print(f"Task send to Mastodon: {task_entry}")
     return jsonify({"message": "Task received", "task_id": task_id})
 
-@app.route("/get_result", methods=["GET"])
+@app.route("/get_result", methods=["POST"])
 def get_result():
     """Fetches processed results for frontend."""
     if not result_queue.empty():
