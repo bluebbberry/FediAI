@@ -15,23 +15,38 @@ export default function HyperloopUI() {
       options: { routing: routingOption },
     };
 
-    // Mock API call to post to Mastodon
-    setTimeout(() => {
-      console.log("Posted to Mastodon:", requestData);
+    try {
+      const response = await fetch("http://localhost:5000/send_prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestData),
+      });
+      const data = await response.json();
       setStatus("Waiting for results...");
-    }, 1000);
+    } catch (error) {
+      setStatus("Error sending prompt");
+      console.error("Error:", error);
+    }
   };
 
   useEffect(() => {
-    // Mock polling for results
-    const interval = setInterval(() => {
-      if (status === "Waiting for results...") {
-        setResult("Translated text: Ceci est un test");
-        setStatus("Completed");
-        clearInterval(interval);
+    const fetchResult = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/get_result");
+        const data = await response.json();
+        if (data.result) {
+          setResult(data.result);
+          setStatus("Completed");
+        }
+      } catch (error) {
+        console.error("Error fetching result:", error);
       }
-    }, 5000);
-    return () => clearInterval(interval);
+    };
+
+    if (status === "Waiting for results...") {
+      const interval = setInterval(fetchResult, 5000);
+      return () => clearInterval(interval);
+    }
   }, [status]);
 
   const addTask = (task) => {
