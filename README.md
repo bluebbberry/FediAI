@@ -1,4 +1,6 @@
-# HyperLoop
+# FediAI
+
+[FediAI Paper](https://github.com/bluebbberry/FediAI/wiki/FediAI%E2%80%90Paper)
 
 Let your AI prompts travel across the Fediverse and beyond.
 
