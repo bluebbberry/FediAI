@@ -19,6 +19,7 @@ CORS(app, resources={r"/*": {"origins": "*"}})  # Allows all origins
 # Local queues for tasks and results
 task_queue = queue.Queue()
 result_queue = queue.Queue()
+task_done = queue.Queue()
 
 def post_to_queue(task_data):
     """Posts the fetched task to a local queue, including the original post."""
@@ -55,6 +56,8 @@ def subscribe_to_topic():
         if result is None:
             break
         reposter.send_result(result)
+        if not result.get("remaining_tasks"):
+            task_done.put(result)
         result_queue.task_done()
         time.sleep(1)
 
@@ -87,8 +90,8 @@ def send_prompt():
 @app.route("/get_result", methods=["POST"])
 def get_result():
     """Fetches processed results for frontend."""
-    if not result_queue.empty():
-        result = result_queue.get()
+    if not task_done.empty():
+        result = task_done.get()
         return jsonify(result)
     return jsonify({"result": None})
 
