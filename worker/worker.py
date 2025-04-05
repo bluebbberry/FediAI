@@ -46,7 +46,9 @@ def listen_and_respond():
                         print(f"Replied to {post['id']}")
                         if since_id is None:
                             since_id = 0
-                        since_id = max(since_id, post["id"])
+
+                        post_id = int(post["id"])
+                        since_id = max(int(since_id) if since_id else 0, post_id)
         time.sleep(10)
 
 if __name__ == "__main__":
