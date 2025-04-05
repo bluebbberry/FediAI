@@ -1,7 +1,8 @@
 # ai_worker.py
 import time
-import mastodon
+from mastodon import Mastodon
 import os
+from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 
@@ -9,12 +10,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Connect to Mastodon
-mastodon_client = mastodon.Mastodon(
+mastodon_client = Mastodon(
     access_token=os.getenv("ACCESS_TOKEN"),
     api_base_url=os.getenv("MASTODON_BASE_URL")  # change if using other instance
 )
 
+target_user_name = os.getenv("USER_NAME")
+
 HASHTAGS = ["whattocook", "diyideas", "learnai", "promptsharing"]
+
+startup_time = datetime.now(timezone.utc)
 
 def listen_and_respond():
     since_id = None
@@ -23,14 +28,23 @@ def listen_and_respond():
         for tag in HASHTAGS:
             posts = mastodon_client.timeline_hashtag(tag, since_id=since_id)
             for post in reversed(posts):
-                if post["account"]["bot"] is False:
-                    reply_text = f"Hi @{post['account']['acct']}!"
-                    mastodon_client.status_post(
-                        status=reply_text,
-                        in_reply_to_id=post["id"]
-                    )
-                    print(f"Replied to {post['id']}")
-                    since_id = max(since_id or 0, post["id"])
+                username = post['account']['acct']
+
+                if username.lower() == target_user_name.lower():
+                    if post["account"]["bot"] is False:
+                        post_time = post["created_at"]
+                        if post_time < startup_time:
+                            continue
+
+                        reply_text = f"Hi @{post['account']['acct']}!"
+                        mastodon_client.status_post(
+                            status=reply_text,
+                            in_reply_to_id=post["id"]
+                        )
+                        print(f"Replied to {post['id']}")
+                        if since_id is None:
+                            since_id = 0
+                        since_id = max(since_id, post["id"])
         time.sleep(10)
 
 if __name__ == "__main__":
