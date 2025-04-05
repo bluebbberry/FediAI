@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 export default function FediAIApp() {
-  const [view, setView] = useState("start"); // start | select | chat
+  const [view, setView] = useState("start");
   const [selectedHashtag, setSelectedHashtag] = useState(null);
   const [prompt, setPrompt] = useState("");
   const [status, setStatus] = useState("");
@@ -16,6 +16,7 @@ export default function FediAIApp() {
 
     const requestData = {
       value: prompt,
+      hashtag: selectedHashtag
     };
 
     try {
@@ -52,8 +53,6 @@ export default function FediAIApp() {
       return () => clearInterval(interval);
     }
   }, [status]);
-
-  // === VIEWS ===
 
   if (view === "start") {
     return (
@@ -105,7 +104,6 @@ export default function FediAIApp() {
     );
   }
 
-  // === CHAT VIEW ===
   return (
     <div style={{ padding: "20px", maxWidth: "600px", margin: "0 auto", fontFamily: "Arial, sans-serif" }}>
       <h1 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "10px" }}>
