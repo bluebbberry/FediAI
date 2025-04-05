@@ -1,6 +1,6 @@
 # app.py
 from flask import Flask, request, jsonify
-import mastodon
+from mastodon import Mastodon
 import queue
 import os
 
@@ -13,7 +13,7 @@ app = Flask(__name__)
 q = queue.Queue()
 
 # Set up Mastodon API
-mastodon_client = mastodon.Mastodon(
+mastodon_client = Mastodon(
     access_token=os.getenv("ACCESS_TOKEN"),
     api_base_url=os.getenv("MASTODON_BASE_URL")  # change if using other instance
 )
