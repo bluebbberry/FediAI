@@ -1,6 +1,7 @@
 # app.py
 from flask import Flask, request, jsonify
 from mastodon import Mastodon
+from flask_cors import CORS
 import queue
 import os
 
@@ -10,6 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 q = queue.Queue()
 
 # Set up Mastodon API
