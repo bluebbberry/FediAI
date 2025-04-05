@@ -11,8 +11,8 @@ load_dotenv()
 
 # Connect to Mastodon
 mastodon_client = Mastodon(
-    access_token=os.getenv("ACCESS_TOKEN"),
-    api_base_url=os.getenv("MASTODON_BASE_URL")  # change if using other instance
+    access_token=os.getenv("WORKER_ACCESS_TOKEN"),
+    api_base_url=os.getenv("WORKER_MASTODON_BASE_URL")  # change if using other instance
 )
 
 target_user_name = os.getenv("USER_NAME")
@@ -22,6 +22,8 @@ HASHTAGS = ["whattocook", "diyideas", "learnai", "promptsharing"]
 startup_time = datetime.now(timezone.utc)
 
 def listen_and_respond():
+    print("Start listening to new prompts ...")
+
     since_id = None
 
     while True:
@@ -36,7 +38,7 @@ def listen_and_respond():
                         if post_time < startup_time:
                             continue
 
-                        reply_text = f"Hi @{post['account']['acct']}!"
+                        reply_text = f"What about ordering pizza? @{post['account']['acct']}"
                         mastodon_client.status_post(
                             status=reply_text,
                             in_reply_to_id=post["id"]
